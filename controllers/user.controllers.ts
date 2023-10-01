@@ -5,7 +5,6 @@ import { CatchAsyncError } from "../middleware/catchAsyncErrors";
 import userModel from "../models/user.model";
 import jwt, { Secret } from "jsonwebtoken";
 import ErrorHandler from "../utils/ErrorHandler";
-import path from "path";
 import sendMail from "../utils/sendmail";
 dotenv.config();
 
