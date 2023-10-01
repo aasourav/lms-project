@@ -7,6 +7,7 @@ import ErrorHandler from "../utils/ErrorHandler";
 import sendMail from "../utils/sendmail";
 dotenv.config();
 
+//registration user
 interface IActivationToken {
   token: string;
   activationCode: string;
@@ -23,7 +24,6 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
-//registration user
 interface IRegistration {
   name: string;
   email: string;
@@ -66,6 +66,40 @@ export const registrationUser = CatchAsyncError(
       });
     } catch (error: any) {
       next(new ErrorHandler(error.message, 404));
+    }
+  }
+);
+
+interface IActivationRequest {
+  activationToken: string;
+  activationCode: string;
+}
+export const activateUser = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { activationCode, activationToken } =
+        req.body as IActivationRequest;
+      const newUser: any = jwt.verify(
+        activationToken,
+        process.env.ACTIVATION_SECRET as string
+      );
+      if (newUser.activationCode !== activationCode) {
+        return next(new ErrorHandler("Invalid Activation Code", 400));
+      }
+
+      const { name, email, password } = newUser.user;
+      const isExistUser = await userModel.findOne({ email });
+      if (isExistUser) {
+        return new ErrorHandler("User already exist.", 400);
+      }
+      const user = await userModel.create({
+        name,
+        email,
+        password,
+      });
+      res.status(200).json({ success: true, user });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
     }
   }
 );
