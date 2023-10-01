@@ -5,8 +5,7 @@ require("dotenv").config();
 const dbUrl: string = process.env.DB_URL || "";
 export const connectDb = async () => {
   try {
-    await mongoose.connect(dbUrl).then((data: any) => {
-      console.log(data);
+    await mongoose.connect(dbUrl).then(() => {
       console.log("db connected");
     });
   } catch (err: any) {
