@@ -1,12 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import ErrorHandler from "../utils/ErrorHandler";
 
-const ErrorMiddleware = (
-  err: any,
-  _: Request,
-  res: Response,
-  __: NextFunction
-) => {
+const ErrorMiddleware = (err: any, _: Request, res: Response) => {
   err.statusCode = err.statusCode || 500;
   err.message = err.message || "Internal server error.";
 
