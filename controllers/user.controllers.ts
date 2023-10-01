@@ -1,11 +1,9 @@
 import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
-import ejs from "ejs";
 import { CatchAsyncError } from "../middleware/catchAsyncErrors";
 import userModel from "../models/user.model";
 import jwt, { Secret } from "jsonwebtoken";
 import ErrorHandler from "../utils/ErrorHandler";
-import path from "path";
 import sendMail from "../utils/sendmail";
 dotenv.config();
 
@@ -35,7 +33,7 @@ interface IRegistration {
 export const registrationUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, name, password, avatar } = req.body as IRegistration;
+      const { email, name, password } = req.body as IRegistration;
       const isEmailExist = await userModel.findOne({ email });
       if (isEmailExist) {
         return next(new ErrorHandler("Email already exist", 400));
