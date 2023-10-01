@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
-import ejs from "ejs";
 import { CatchAsyncError } from "../middleware/catchAsyncErrors";
 import userModel from "../models/user.model";
 import jwt, { Secret } from "jsonwebtoken";

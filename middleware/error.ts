@@ -3,7 +3,7 @@ import ErrorHandler from "../utils/ErrorHandler";
 
 const ErrorMiddleware = (
   err: any,
-  req: Request,
+  _: Request,
   res: Response,
   next: NextFunction
 ) => {
