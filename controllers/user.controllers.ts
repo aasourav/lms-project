@@ -97,7 +97,7 @@ export const activateUser = CatchAsyncError(
         email,
         password,
       });
-      res.status(200).json({ success: true });
+      res.status(200).json({ success: true, user });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
