@@ -33,7 +33,7 @@ interface IRegistration {
 export const registrationUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { email, name, password, avatar } = req.body as IRegistration;
+      const { email, name, password } = req.body as IRegistration;
       const isEmailExist = await userModel.findOne({ email });
       if (isEmailExist) {
         return next(new ErrorHandler("Email already exist", 400));
