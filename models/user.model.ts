@@ -5,7 +5,7 @@ import { timeStamp } from "console";
 const emailRegExpPattern: RegExp =
   /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-export interface IUser extends Document {
+interface IUser extends Document {
   name: string;
   email: string;
   password: string;
@@ -74,5 +74,5 @@ userSchema.methods.comparePassword = async function (
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const userModel: Model<IUser> = mongoose.model<IUser>("user", userSchema);
+const userModel = (Model<IUser> = mongoose.model("User", userSchema));
 export default userModel;

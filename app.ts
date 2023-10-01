@@ -5,7 +5,6 @@ dotenv.config();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import ErrorMiddleware from "./middleware/error";
-import userRouter from "./routes/user.route";
 
 //body parser
 app.use(express.json({ limit: "50mb" }));
@@ -21,9 +20,6 @@ app.get("/test", (req: Request, res: Response) => {
     message: "Api is working well",
   });
 });
-
-//routes
-app.use("/api/v1", userRouter);
 
 //unknown route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
