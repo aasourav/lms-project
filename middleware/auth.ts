@@ -9,7 +9,6 @@ require("dotenv").config();
 export const isAuthenticated = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const accessToken = req.cookies.access_token;
-    console.log("accessToken: ", accessToken);
 
     if (!accessToken) {
       return next(new ErrorHandler("User is not authenticated", 400));
