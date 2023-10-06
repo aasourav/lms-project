@@ -2,7 +2,9 @@ import dotenv from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../middleware/catchAsyncErrors";
 import userModel from "../models/user.model";
+import bcrypt from "bcryptjs";
 import jwt, { Secret } from "jsonwebtoken";
+import cloudinary from "cloudinary";
 import ErrorHandler from "../utils/ErrorHandler";
 import sendMail from "../utils/sendmail";
 import {
@@ -197,6 +199,7 @@ export const updateAccessToken = CatchAsyncError(
         }
       );
 
+      req.user = user;
       res.cookie("access_token", accessToken, accessTokenOptions);
       res.cookie("refresh_token", newRefreshToken, refreshTokenOptions);
 
@@ -223,6 +226,7 @@ export const getUserInfo = CatchAsyncError(
 );
 
 // social auth
+// tested ok
 export const socialAuth = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -236,6 +240,100 @@ export const socialAuth = CatchAsyncError(
         });
         sendToken(newUser, 200, res);
       }
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+// update user info
+export const updateUserInfo = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, name } = req.body;
+      const userId = req.user?._id;
+      const user: any = userModel.findById(userId);
+      if (email && user) {
+        const isEmailExist = await userModel.findOne({ email });
+        if (isEmailExist) {
+          return next(new ErrorHandler("Email already exist", 400));
+        }
+        user.email = email;
+      }
+      if (name && user) {
+        user.name = name;
+      }
+      user?.save();
+      await redis.set(userId, JSON.stringify(user));
+
+      res.status(201).json({
+        success: "true",
+        user,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+// change password
+export const changePassword = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { oldPassword, newPassword } = req.body;
+    const email = req.user?.email;
+    const user = await userModel.findOne({ email }).select("password");
+    const isOldPasswordIsValid = await bcrypt.compare(
+      oldPassword,
+      user?.password || ""
+    );
+    if (isOldPasswordIsValid) {
+      const generateNewHashPassword = await bcrypt.hash(newPassword, 10);
+      await userModel.findOneAndUpdate(
+        { email },
+        { $set: { password: generateNewHashPassword } }
+      );
+      return res.status(201).json({
+        success: true,
+        message: "Password changed successfully.",
+      });
+    } else {
+      return next(new ErrorHandler("Current password is wrong", 400));
+    }
+  }
+);
+
+// update avatar
+export const updateAvatar = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { avatar } = req.body;
+      const userId = req.user?._id;
+      const user = await userModel.findById(userId);
+
+      if (!user) {
+        return next(new ErrorHandler("User not found", 400));
+      }
+
+      if (user?.avatar.publicId) {
+        await cloudinary.v2.uploader.destroy(user.avatar.publicId);
+      } else {
+        const cloud = await cloudinary.v2.uploader.upload(avatar, {
+          folder: "avatars",
+        });
+        user.avatar = {
+          publicId: cloud.public_id,
+          url: cloud.secure_url,
+        };
+      }
+
+      await user.save();
+      await redis.set(userId, JSON.stringify(user));
+
+      res.status(200).json({
+        success: true,
+        message: "Avatar updated",
+        user
+      });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
     }
