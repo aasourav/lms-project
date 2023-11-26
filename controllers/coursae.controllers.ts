@@ -15,6 +15,8 @@ import ErrorHandler from "../utils/ErrorHandler";
 import { createCourse } from "../services/course.service";
 import CourseModel from "../models/course.model";
 import { redis } from "../utils/redis";
+import mongoose from "mongoose";
+import sendMail from "../utils/sendmail";
 
 //upload course
 export const uploadCourse = CatchAsyncError(
@@ -146,6 +148,115 @@ export const getCourseByUser = CatchAsyncError(
       const courseDoc = await CourseModel.findById(courseId);
       const content = courseDoc?.courseData;
       return res.status(200).json({ status: true, content });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
+interface IAddQuestionData {
+  question: string;
+  courseId: string;
+  contentId: string;
+}
+export const addQuestion = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { contentId, courseId, question } = req.body as IAddQuestionData;
+      const courseDoc = await CourseModel.findById(courseId);
+      if (!mongoose.Types.ObjectId.isValid(contentId)) {
+        return next(new ErrorHandler("Invalid content id", 400));
+      }
+      const courseContent = courseDoc?.courseData.find((item: any) =>
+        item._id.equals(contentId)
+      );
+
+      if (!courseContent) {
+        return next(new ErrorHandler("Invalid content id", 400));
+      }
+
+      //create a new question
+      const newQuestion: any = {
+        user: req?.user,
+        question,
+        questionReplies: [],
+      };
+
+      //add this question to our course content
+      courseContent.questions.push(newQuestion);
+
+      //save the updated course
+      await courseDoc?.save();
+
+      res.status(200).json({
+        success: true,
+        courseDoc,
+      });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
+// add answer in course question
+interface IAddAnswerData {
+  answer: string;
+  courseId: string;
+  contentId: string;
+  questionId: string;
+}
+
+export const addAnswer = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { answer, contentId, courseId, questionId } =
+        req.body as IAddAnswerData;
+
+      const courseDoc = await CourseModel.findById(courseId);
+      if (!mongoose.Types.ObjectId.isValid(contentId)) {
+        return next(new ErrorHandler("Invalid content id", 400));
+      }
+      const courseContent = courseDoc?.courseData.find((item: any) =>
+        item._id.equals(contentId)
+      );
+
+      const question = courseContent?.questions.find((item: any) =>
+        item._id.equals(questionId)
+      );
+
+      if (!question) {
+        return next(new ErrorHandler("Invalid question id", 400));
+      }
+
+      // create answer
+      const newAns: any = {
+        user: req.user,
+        answer,
+      };
+
+      question.questionReplies.push(newAns);
+      await courseDoc?.save();
+
+      if (req?.user?._id === question.user._id) {
+        //create notification
+      } else {
+        const data = {
+          name: question.user.name,
+          title: courseContent?.title,
+        };
+        // const html = await ejs.renderFile(
+        //   path.join(__dirname, "../mails/question-reply.ejs")
+        // );
+
+        try {
+          await sendMail({
+            email: question.user.email,
+            subject: "Question reply",
+            template: "question-reply.ejs",
+            data,
+          });
+        } catch (err) {}
+      }
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 500));
     }

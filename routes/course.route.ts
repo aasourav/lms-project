@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  addAnswer,
+  addQuestion,
   getAllCourses,
   getCourseByUser,
   getSingleCourse,
@@ -28,5 +30,9 @@ courseRouter.get("/get-courses", getAllCourses);
 //test why do we need isAuth ,
 //note bofore isAuth is shows you are not eligible
 courseRouter.get("/get-course-content/:id", isAuthenticated, getCourseByUser);
+
+courseRouter.put("/add-question", isAuthenticated, addQuestion);
+
+courseRouter.put("/add-answer", isAuthenticated, addAnswer);
 
 export default courseRouter;
