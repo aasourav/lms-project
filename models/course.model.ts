@@ -7,8 +7,8 @@ export interface IComment extends Document {
   questionReplies: IComment[];
 }
 
-interface IReview extends Document {
-  user: object;
+export interface IReview extends Document {
+  user: IUser;
   rating: number;
   comment: string;
   commentReplies: IComment[];
@@ -56,6 +56,7 @@ const reviewSchema = new Schema<IReview>({
     default: 0,
   },
   comment: String,
+  commentReplies: [Object],
 });
 
 const linkSchema = new Schema<ILink>({
