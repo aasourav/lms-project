@@ -332,10 +332,21 @@ export const updateAvatar = CatchAsyncError(
       res.status(200).json({
         success: true,
         message: "Avatar updated",
-        user
+        user,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const getAllUsers = CatchAsyncError(
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userDocs = await userModel.find().sort({ createdAt: -1 });
+      res.status(200).json({ success: true, userDocs });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
     }
   }
 );

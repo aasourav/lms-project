@@ -10,7 +10,7 @@
 import { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../middleware/catchAsyncErrors";
 import ErrorHandler from "../utils/ErrorHandler";
-import { IOrder } from "../models/order.model";
+import OrderModel, { IOrder } from "../models/order.model";
 import userModel from "../models/user.model";
 import CourseModel from "../models/course.model";
 import { newOrder } from "../services/order.services";
@@ -87,6 +87,17 @@ export const createOrder = CatchAsyncError(
       await courseDoc.save();
 
       newOrder(data, res, next); // why we need to send res
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
+export const getAllOrders = CatchAsyncError(
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orderDocs = await OrderModel.find().sort({ createdAt: -1 });
+      res.status(200).json({ success: true, orderDocs });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 500));
     }
