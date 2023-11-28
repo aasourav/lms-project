@@ -374,3 +374,14 @@ export const addReplyReview = CatchAsyncError(
     }
   }
 );
+
+export const getAllCoursesAdmin = CatchAsyncError(
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const courseDocs = await CourseModel.find().sort({ createdAt: -1 });
+      res.status(200).json({ success: true, courseDocs });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
