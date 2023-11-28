@@ -17,6 +17,7 @@ import CourseModel, { IReview } from "../models/course.model";
 import { redis } from "../utils/redis";
 import mongoose from "mongoose";
 import sendMail from "../utils/sendmail";
+import NotificationModel from "../models/notification.model";
 
 //upload course
 export const uploadCourse = CatchAsyncError(
@@ -43,7 +44,7 @@ export const uploadCourse = CatchAsyncError(
 );
 
 //edit course
-export const getRoutes = CatchAsyncError(
+export const editCourse = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body;
@@ -185,6 +186,12 @@ export const addQuestion = CatchAsyncError(
       //add this question to our course content
       courseContent.questions.push(newQuestion);
 
+      await NotificationModel.create({
+        userId: req.user?._id,
+        title: "New Question",
+        message: `You have a new question from ${courseContent.title}`,
+      });
+
       //save the updated course
       await courseDoc?.save();
 
@@ -239,14 +246,16 @@ export const addAnswer = CatchAsyncError(
 
       if (req?.user?._id === question.user._id) {
         //create notification
+        await NotificationModel.create({
+          userId: req.user?._id,
+          title: "New Question reply received",
+          message: `You have a new question reply from ${courseContent?.title}`,
+        });
       } else {
         const data = {
           name: question.user.name,
           title: courseContent?.title,
         };
-        // const html = await ejs.renderFile(
-        //   path.join(__dirname, "../mails/question-reply.ejs")
-        // );
 
         try {
           await sendMail({
@@ -360,6 +369,17 @@ export const addReplyReview = CatchAsyncError(
       await courseDoc?.save();
 
       res.status(200).json({ success: true, courseDoc });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
+export const getAllCoursesAdmin = CatchAsyncError(
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const courseDocs = await CourseModel.find().sort({ createdAt: -1 });
+      res.status(200).json({ success: true, courseDocs });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 500));
     }
