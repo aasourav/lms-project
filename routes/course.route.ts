@@ -3,6 +3,7 @@ import {
   addAnswer,
   addQuestion,
   addReview,
+  editCourse,
   getAllCourses,
   getCourseByUser,
   getSingleCourse,
@@ -22,7 +23,7 @@ courseRouter.put(
   "/edit-course/:id",
   isAuthenticated,
   authRoles("admin"),
-  uploadCourse
+  editCourse
 );
 
 courseRouter.get("/get-course/:id", getSingleCourse);
