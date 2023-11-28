@@ -332,10 +332,40 @@ export const updateAvatar = CatchAsyncError(
       res.status(200).json({
         success: true,
         message: "Avatar updated",
-        user
+        user,
       });
     } catch (err: any) {
       return next(new ErrorHandler(err.message, 400));
+    }
+  }
+);
+
+export const getAllUsers = CatchAsyncError(
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userDocs = await userModel.find().sort({ createdAt: -1 });
+      return res.status(200).json({ success: true, userDocs });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
+
+//update user controller
+
+export const updateUserRole = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id, role } = req.body;
+      const userDoc = await userModel.findByIdAndUpdate(
+        id,
+        { role },
+        { new: true }
+      );
+
+      return res.status(200).json({ success: true, userDoc });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
     }
   }
 );
