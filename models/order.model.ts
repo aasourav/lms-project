@@ -1,4 +1,4 @@
-import mongoose, { Model, Schema } from "mongoose";
+import mongoose, { Model, Schema, Document } from "mongoose";
 
 export interface IOrder extends Document {
   courseId: string;
