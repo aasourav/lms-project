@@ -385,3 +385,22 @@ export const getAllCoursesAdmin = CatchAsyncError(
     }
   }
 );
+export const deleteCourse = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const courseDoc = CourseModel.findById(id);
+      if (!courseDoc) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+      await CourseModel.deleteOne({ id });
+      await redis.del(id);
+
+      return res
+        .status(200)
+        .json({ success: true, message: "Successfully deleted" });
+    } catch (err: any) {
+      return next(new ErrorHandler(err.message, 500));
+    }
+  }
+);
